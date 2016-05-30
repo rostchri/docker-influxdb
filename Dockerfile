@@ -23,6 +23,9 @@ EXPOSE 8083
 # HTTP API
 EXPOSE 8086
 
+# collectd
+EXPOSE 25826/udp
+
 # Raft port (for clustering, don't expose publicly!)
 #EXPOSE 8090
 
