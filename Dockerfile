@@ -17,6 +17,9 @@ RUN apk add --no-cache --virtual .build-deps wget gnupg tar ca-certificates && \
     apk del .build-deps
 COPY influxdb.conf /etc/influxdb/influxdb.conf
 
+RUN mkdir -p /usr/share/collectd
+ADD types.db /usr/share/collectd/types.db
+
 # ports for Admin server WebUI - HTTP API -collectd
 EXPOSE 8083 8086 25826/udp
 
