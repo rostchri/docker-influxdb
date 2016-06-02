@@ -22,6 +22,7 @@ EXPOSE 8083 8086 25826/udp
 
 VOLUME /var/lib/influxdb
 
+
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["influxd"]
