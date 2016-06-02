@@ -1,38 +1,27 @@
-FROM tutum/curl:trusty
-MAINTAINER François-Guillaume Ribreau <docker@fgribreau.com>
+FROM alpine:3.3
 
+ENV INFLUXDB_VERSION 0.13.0
+RUN apk add --no-cache --virtual .build-deps wget gnupg tar ca-certificates && \
+    update-ca-certificates && \
+    gpg --keyserver hkp://ha.pool.sks-keyservers.net \
+        --recv-keys 05CE15085FC09D18E99EFB22684A14CF2582E0C5 && \
+    wget -q https://dl.influxdata.com/influxdb/releases/influxdb-${INFLUXDB_VERSION}-static_linux_amd64.tar.gz.asc && \
+    wget -q https://dl.influxdata.com/influxdb/releases/influxdb-${INFLUXDB_VERSION}-static_linux_amd64.tar.gz && \
+    gpg --batch --verify influxdb-${INFLUXDB_VERSION}-static_linux_amd64.tar.gz.asc influxdb-${INFLUXDB_VERSION}-static_linux_amd64.tar.gz && \
+    mkdir -p /usr/src && \
+    tar -C /usr/src -xzf influxdb-${INFLUXDB_VERSION}-static_linux_amd64.tar.gz && \
+    rm -f /usr/src/influxdb-*/influxdb.conf && \
+    chmod +x /usr/src/influxdb-*/* && \
+    cp -a /usr/src/influxdb-*/* /usr/bin/ && \
+    rm -rf *.tar.gz* /usr/src /root/.gnupg && \
+    apk del .build-deps
+COPY influxdb.conf /etc/influxdb/influxdb.conf
 
-# Install InfluxDB
-ENV INFLUXDB_VERSION 0.12.1-1
-RUN curl -s -o /tmp/influxdb_latest_amd64.deb https://s3.amazonaws.com/influxdb/influxdb_${INFLUXDB_VERSION}_amd64.deb && \
-  dpkg -i /tmp/influxdb_latest_amd64.deb && \
-  rm /tmp/influxdb_latest_amd64.deb && \
-  rm -rf /var/lib/apt/lists/*
+# ports for Admin server WebUI - HTTP API -collectd
+EXPOSE 8083 8086 25826/udp
 
-ADD types.db /usr/share/collectd/types.db
-ADD config.toml /config/config.toml
-ADD run.sh /run.sh
-RUN chmod +x /*.sh
+VOLUME /var/lib/influxdb
 
-ENV PRE_CREATE_DB **None**
-ENV SSL_SUPPORT **False**
-ENV SSL_CERT **None**
-
-# Admin server WebUI
-EXPOSE 8083
-
-# HTTP API
-EXPOSE 8086
-
-# Port for collectd
-EXPOSE 25826/udp
-
-# Raft port (for clustering, don't expose publicly!)
-#EXPOSE 8090
-
-# Protobuf port (for clustering, don't expose publicly!)
-#EXPOSE 8099
-
-VOLUME ["/data"]
-
-CMD ["/run.sh"]
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["influxd"]
