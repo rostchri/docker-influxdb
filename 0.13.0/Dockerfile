@@ -1,6 +1,7 @@
 FROM alpine:3.3
 
 ENV INFLUXDB_VERSION 0.13.0
+
 RUN apk add --no-cache --virtual .build-deps wget gnupg tar ca-certificates && \
     update-ca-certificates && \
     gpg --keyserver hkp://ha.pool.sks-keyservers.net \
@@ -15,17 +16,18 @@ RUN apk add --no-cache --virtual .build-deps wget gnupg tar ca-certificates && \
     cp -a /usr/src/influxdb-*/* /usr/bin/ && \
     rm -rf *.tar.gz* /usr/src /root/.gnupg && \
     apk del .build-deps
+
 COPY influxdb.conf /etc/influxdb/influxdb.conf
 
 RUN mkdir -p /usr/share/collectd
-ADD types.db /usr/share/collectd/types.db
+COPY types.db /usr/share/collectd/types.db
 
-# ports for Admin server WebUI - HTTP API -collectd
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# ports for admin-server/webui/http-api/collectd
 EXPOSE 8083 8086 25826/udp
 
 VOLUME /var/lib/influxdb
-
-
-COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["influxd"]
