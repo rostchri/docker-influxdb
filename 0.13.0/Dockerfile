@@ -11,8 +11,8 @@ ENV RIEMANN_VERSION=0.2.9  \
 
 # supervisor-variables
 ENV PYTHON_VERSION=2.7.11-r3 \
-    PY_PIP_VERSION=6.1.1-r0 \
-    SUPERVISOR_VERSION=3.2.0
+    PY_PIP_VERSION=8.1.2-r0 \
+    SUPERVISOR_VERSION=3.3.0
     
 RUN apk add --no-cache --virtual .build-deps wget gnupg tar ca-certificates && \
     update-ca-certificates && \
@@ -51,7 +51,7 @@ ENV GOPATH /go
 ENV PATH /go/bin:$PATH
 
 RUN mkdir -p /go/src /go/bin && chmod -R 777 /go                                                              && \
-    apk --update add bash go                                                                                  && \
+    apk --update add bash go net-snmp-tools                                                                   && \
     apk --update add --virtual build-dependencies bzr git mercurial subversion openssh-client ca-certificates && \
     cd /go/src && go get github.com/paulstuart/influxsnmp && go install github.com/paulstuart/influxsnmp      && \
     apk del build-dependencies                                                                                && \
@@ -69,8 +69,9 @@ RUN cd /opt/riemann/ && tar -xj -f /riemann.tar.bz2 && rm -f /riemann.tar.bz2
 # supervisor
 RUN apk update && apk add -u python=$PYTHON_VERSION py-pip=$PY_PIP_VERSION
 RUN pip install supervisor==$SUPERVISOR_VERSION
+RUN mkdir -p /var/log/supervisor
 
 VOLUME /var/lib/influxdb
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["supervisord", "-c", "/etc/supervisor.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor.conf"]
