@@ -1,0 +1,6 @@
+[template]
+src   = "riemann.config.tmpl"
+dest  = "/opt/riemann/riemann.config"
+owner = "root"
+group = "root"
+mode  = "0644"

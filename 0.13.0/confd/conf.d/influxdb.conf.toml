@@ -1,0 +1,6 @@
+[template]
+src   = "influxdb.conf.tmpl"
+dest  = "/etc/influxdb/influxdb.conf"
+owner = "root"
+group = "root"
+mode  = "0644"
