@@ -1,0 +1,6 @@
+[template]
+src   = "service-influxdb.runit.tmpl"
+dest  = "/etc/service/influxdb/run"
+owner = "root"
+group = "root"
+mode  = "0744"

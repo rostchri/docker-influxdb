@@ -1,0 +1,6 @@
+[template]
+src   = "service-riemann-dashboard.runit.tmpl"
+dest  = "/etc/service/riemann-dashboard/run"
+owner = "root"
+group = "root"
+mode  = "0744"

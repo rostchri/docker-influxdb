@@ -1,6 +1,0 @@
-[template]
-src   = "supervisor.conf.tmpl"
-dest  = "/etc/supervisor.conf"
-owner = "root"
-group = "root"
-mode  = "0644"

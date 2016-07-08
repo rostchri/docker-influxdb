@@ -1,0 +1,6 @@
+[template]
+src   = "service-riemann.log.runit.tmpl"
+dest  = "/etc/service/riemann/log/run"
+owner = "root"
+group = "root"
+mode  = "0744"

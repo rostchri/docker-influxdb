@@ -1,0 +1,45 @@
+#!/bin/sh
+
+env > /etc/envvars
+
+echo "### Executing all pre-service scripts in /etc/runit_init.d now ..."
+for script in /etc/runit_init.d/*
+do
+    if [ -x "$script" ]; then
+        echo >&2 "*** Running: $script"
+        $script
+        retval=$?
+        if [ $retval != 0 ];
+        then
+            echo >&2 "*** Failed with return value: $?"
+            exit $retval
+        fi
+    fi
+done
+
+# see https://peter.bourgon.org/blog/2015/09/24/docker-runit-and-graceful-termination.html
+sv_stop() {
+        echo "### Stopping all runit services now ..."
+        for s in $(ls -d /etc/service/*)
+        do
+          /sbin/sv stop $s
+        done
+}
+
+trap "sv_stop; exit" SIGTERM
+
+echo "### Starting runit and all services now ..."
+/sbin/runsvdir /etc/service &
+
+# begin: attach to shell
+# to be able to attach to a running docker-session and get a shell the following code is used
+#while ( true )
+#do
+#  echo "Detach with Ctrl-p + Ctrl-q. Spawning a new shell now"
+#  sleep 1
+#  /bin/sh
+#done
+# end: attach to shell
+
+wait
+    

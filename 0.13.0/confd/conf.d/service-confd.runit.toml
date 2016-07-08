@@ -1,0 +1,6 @@
+[template]
+src   = "service-confd.runit.tmpl"
+dest  = "/etc/service/confd/run"
+owner = "root"
+group = "root"
+mode  = "0744"

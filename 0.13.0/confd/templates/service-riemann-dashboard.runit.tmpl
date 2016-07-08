@@ -1,0 +1,16 @@
+#! /bin/sh
+
+. /etc/envvars
+
+exec 2>&1 
+set -e
+
+umask 022
+
+PROGARGS="/etc/riemann/riemann-dash-config.rb"
+PROGHOME="/"
+PROGNAME="/usr/bin/riemann-dash"
+
+export HOME=/root
+
+cd  "${PROGHOME}" &&  exec $PROGNAME $PROGARGS

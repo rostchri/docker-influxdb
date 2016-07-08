@@ -1,21 +1,73 @@
-(logging/init)
-(info "loading" *config-file*)
+;; be sure to execute on influxdb first:
+;; CREATE DATABASE riemann
+;; CREATE USER riemann WITH PASSWORD 'riemann_password'
+;; GRANT ALL ON riemann TO riemann
 
-(tcp-server :host "0.0.0.0"   :port 5555)
-(udp-server :host "0.0.0.0"   :port 5555)
-(ws-server  :host "0.0.0.0"   :port 5556)
+(logging/init)              
+;;Riemann log file location                    
+;;(logging/init {:file "/var/log/riemann.log"})
+(info "loading" *config-file*)  
 
-; Expire old events from the index every 5 seconds.
-(periodically-expire 5)
+                                                                                             
+;; InfluxDB database details where Riemann will store the data. Setup :username and :password
+;; if you added security step behind riemann database access.
+                     
+(def influxdb-creds {
+     :version :0.9    
+     :host "localhost"
+     :port 8086   
+     :db "riemann"      
+     :username "riemann"         
+     :password "riemann_password"
+})
+                               
+;;(def influxdb-out (influxdb {
+;;     :version :0.9    
+;;     :host "localhost"
+;;     :port 8086   
+;;     :db "riemann"      
+;;     :username "riemann"         
+;;     :password "riemann_password"
+;;}))     
+;;(streams        
+;;   influxdb-out)
+
+                      
+(def influxBatchSender
+  (batch 100 1/10                            
+         (async-queue! :agg {:queue-size 1000 
+                             :core-pool-size 1
+                             :max-pool-size 4       
+                             :keep-alive-time 60000}
+                       (influxdb influxdb-creds))))
+
+
+;; listen on the local interface over TCP (5555), UDP (5555) and websockets (5556)
+(let [host "0.0.0.0"]                                                             
+  (tcp-server {:host host :port 5555})
+  (udp-server {:host host :port 5555})
+  (ws-server  {:host host :port 5556}))
+                                       
+
+;; Expire states from its core's index every 60 seconds. Default is 10.
+(periodically-expire 60)                                               
+                        
+;;(let [index (index)]
+;;    ; Inbound events will be passed to these streams:
+;;    (streams                                         
+;;        ; Index all events immediately.
+;;        index                          
+;;        prn  
+;;           
+;;        ; Log expired events.
+;;        (expired  #(warn "expired" %))
+;;    )                                 
+;;)    
+   
 
 (let [index (index)]
-    ; Inbound events will be passed to these streams:
-    (streams
-        ; Index all events immediately.
-        index
-        prn
-
-        ; Log expired events.
-        (expired  #(warn "expired" %))
-    )
-)
+  (streams          
+   (default :ttl 60
+     index         
+     #(info %)
+     influxBatchSender)))
